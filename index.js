@@ -17,6 +17,7 @@ app.post('/', async (req, res) => {
 
   try {
     const hfRes = await fetch(HF_ENDPOINT, {
+  timeout: 180000, // wait up to 3 minutes
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${HF_TOKEN}`,
