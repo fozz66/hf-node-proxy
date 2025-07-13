@@ -17,16 +17,36 @@ app.post('/', async (req, res) => {
 
 console.log("➡️ Forwarding prompt to Hugging Face...");
 
-  try {
-    const hfRes = await fetch(HF_ENDPOINT, {
-  timeout: 180000, // wait up to 3 minutes
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${HF_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ inputs: prompt }),
-    });
+try {
+  console.log("➡️ Forwarding prompt to Hugging Face...");
+
+  const hfRes = await fetch(HF_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${HF_TOKEN}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ inputs: prompt }),
+    timeout: 120000 // allow up to 2 minutes
+  });
+
+  console.log(`✅ Hugging Face responded: ${hfRes.status}`);
+
+  const contentType = hfRes.headers.get("content-type") || "";
+  if (!hfRes.ok || !contentType.includes("image")) {
+    const errBody = await hfRes.text();
+    console.error("❌ HF error:", hfRes.status, errBody);
+    res.status(500).send({ error: "HF request failed", details: errBody });
+    return;
+  }
+
+  const imageBuffer = await hfRes.arrayBuffer();
+  res.setHeader("Content-Type", contentType);
+  res.send(Buffer.from(imageBuffer));
+} catch (err) {
+  console.error("🔥 Proxy error:", err.message || err);
+  res.status(500).send({ error: "Proxy failed to fetch image." });
+}
 
     const contentType = hfRes.headers.get('content-type');
     const body = await hfRes.buffer();
