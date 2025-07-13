@@ -4,7 +4,7 @@ const app = express();
 app.use(express.json());
 
 const HF_TOKEN = process.env.HF_TOKEN;
-const HF_ENDPOINT = "https://<your-new-pro-endpoint>.aws.endpoints.huggingface.cloud";
+const HF_ENDPOINT = "https://hnlzsr3iqsdm2iit.us-east-1.aws.endpoints.huggingface.cloud";
 
 app.post('/', async (req, res) => {
   const prompt = req.body.prompt;
