@@ -15,16 +15,19 @@ app.post('/', async (req, res) => {
 
   console.log("Prompt received:", prompt);
 
-  try {
-    const hfRes = await fetch(HF_ENDPOINT, {
-  timeout: 180000, // wait up to 3 minutes
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${HF_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ inputs: prompt }),
-    });
+console.log("➡️ Forwarding prompt to Hugging Face...");
+
+const hfRes = await fetch(HF_ENDPOINT, {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${HF_TOKEN}`,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({ inputs: prompt }),
+  timeout: 120000 // allow up to 2 minutes
+});
+
+console.log(`✅ Hugging Face responded: ${hfRes.status}`);
 
     const contentType = hfRes.headers.get('content-type');
     const body = await hfRes.buffer();
