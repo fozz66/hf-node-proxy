@@ -4,7 +4,7 @@ const app = express();
 app.use(express.json());
 
 const HF_TOKEN = process.env.HF_TOKEN;
-const HF_ENDPOINT = "https://hnlzsr3iqsdm2iit.us-east-1.aws.endpoints.huggingface.cloud"; // <- Update if needed
+const HF_ENDPOINT = "https://kxofyx70ftkqr0d4.us-east-1.aws.endpoints.huggingface.cloud";
 
 app.post('/', async (req, res) => {
   const prompt = req.body.prompt;
@@ -14,7 +14,7 @@ app.post('/', async (req, res) => {
   }
 
   console.log("✅ Prompt received:", prompt);
-  console.log("➡️ Forwarding prompt to Hugging Face...");
+  console.log("➡️ Sending prompt to Hugging Face...");
 
   try {
     const hfRes = await fetch(HF_ENDPOINT, {
@@ -24,34 +24,33 @@ app.post('/', async (req, res) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ inputs: prompt }),
-      timeout: 120000 // allow up to 2 minutes
     });
 
     console.log(`✅ Hugging Face responded: ${hfRes.status}`);
 
-    const contentType = hfRes.headers.get("content-type") || "";
-    if (!hfRes.ok || !contentType.includes("image")) {
-      const errBody = await hfRes.text();
-      console.error("❌ HF error:", hfRes.status, errBody);
-      res.status(500).send({ error: "HF request failed", details: errBody });
-      return;
+    if (!hfRes.ok) {
+      const errorText = await hfRes.text();
+      console.error("❌ Hugging Face Error:", errorText);
+      return res.status(hfRes.status).json({ error: 'Hugging Face Error', details: errorText });
     }
 
-    const imageBuffer = await hfRes.arrayBuffer();
-    
-    console.log("✔️ Sending image buffer to client, size:", Buffer.byteLength(imageBuffer));
-    
-const base64Image = Buffer.from(imageBuffer).toString("base64");
-res.json({ image: `data:${contentType};base64,${base64Image}` });
+    const contentType = hfRes.headers.get('content-type') || 'image/png';
+    const buffer = await hfRes.arrayBuffer();
+    const base64Image = Buffer.from(buffer).toString("base64");
 
+    console.log("✔️ Returning base64 image to client.");
+    return res.status(200).json({
+      image: `data:${contentType};base64,${base64Image}`
+    });
 
   } catch (err) {
     console.error("🔥 Proxy error:", err.message || err);
-    res.status(500).send({ error: "Proxy failed to fetch image." });
+    return res.status(500).json({ error: "Proxy failed to fetch image." });
   }
 });
 
 app.listen(10000, () => console.log('🚀 Proxy running on port 10000'));
+
 
 
 
