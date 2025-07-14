@@ -38,8 +38,13 @@ app.post('/', async (req, res) => {
     }
 
     const imageBuffer = await hfRes.arrayBuffer();
-    res.setHeader("Content-Type", contentType);
-    res.send(Buffer.from(imageBuffer));
+    console.log("✔️ Sending image buffer to client, size:", Buffer.byteLength(imageBuffer));
+    res.writeHead(200, {
+  "Content-Type": contentType,
+  "Content-Length": Buffer.byteLength(imageBuffer)
+  });
+  res.end(Buffer.from(imageBuffer));
+
 
   } catch (err) {
     console.error("🔥 Proxy error:", err.message || err);
