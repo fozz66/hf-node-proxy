@@ -38,7 +38,9 @@ app.post('/', async (req, res) => {
     }
 
     const imageBuffer = await hfRes.arrayBuffer();
+    
     console.log("✔️ Sending image buffer to client, size:", Buffer.byteLength(imageBuffer));
+    
     res.writeHead(200, {
   "Content-Type": contentType,
   "Content-Length": Buffer.byteLength(imageBuffer)
