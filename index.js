@@ -41,11 +41,8 @@ app.post('/', async (req, res) => {
     
     console.log("✔️ Sending image buffer to client, size:", Buffer.byteLength(imageBuffer));
     
-    res.writeHead(200, {
-  "Content-Type": contentType,
-  "Content-Length": Buffer.byteLength(imageBuffer)
-  });
-  res.end(Buffer.from(imageBuffer));
+const base64Image = Buffer.from(imageBuffer).toString("base64");
+res.json({ image: `data:${contentType};base64,${base64Image}` });
 
 
   } catch (err) {
