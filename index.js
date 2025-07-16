@@ -17,14 +17,37 @@ app.post('/', async (req, res) => {
   console.log("➡️ Sending prompt to Hugging Face...");
 
   try {
-    const hfRes = await fetch(HF_ENDPOINT, {
+    console.log("➡️ Sending prompt to Hugging Face...");
+
+let hfRes;
+let retries = 3;
+while (retries--) {
+  try {
+    hfRes = await fetch(HF_ENDPOINT, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${HF_TOKEN}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ inputs: prompt }),
+      timeout: 90000 // allow 90 seconds
     });
+
+    console.log(`✅ Hugging Face responded: ${hfRes.status}`);
+
+    if (hfRes.ok) break;
+
+    console.warn(`⚠️ Hugging Face returned status ${hfRes.status}`);
+    await new Promise(res => setTimeout(res, 5000)); // wait before retrying
+  } catch (err) {
+    console.error("❌ Proxy fetch error:", err.message || err);
+    await new Promise(res => setTimeout(res, 5000)); // wait before retrying
+  }
+}
+
+if (!hfRes || !hfRes.ok) {
+  return res.status(503).send({ error: "Proxy failed after retries." });
+}
 
     console.log(`✅ Hugging Face responded: ${hfRes.status}`);
 
